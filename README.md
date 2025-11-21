@@ -1,3 +1,194 @@
+# FAO / World Bank → Navicat Schema Transformer
+
+### Transform External Dataset to Match IFPRI Navicat Table Schema
+
+**Created by: Minsol Cho**
+**Date: 2025-08-07**
+
+---
+
+## 📌 Overview
+
+This R script was developed to **automatically transform Excel data downloaded from FAO or the World Bank**
+into the standardized **Navicat table schema used internally at IFPRI**.
+
+Since raw datasets from different institutions have varying column structures and cannot be directly uploaded into the Navicat database, this script automates the entire standardization process, including:
+
+* Automatic detection of indicator value columns
+* Mapping of ISO3, Time, and value columns
+* Generation and alignment of all required Navicat schema columns
+* User input for indicatorTypeID and unit
+* Exporting the final output as an **Excel file (.xlsx) ready for Navicat upload**
+
+---
+
+## 📁 Key Features
+
+### ✔️ 1. Automatic Column Detection
+
+* Automatically identifies the column containing numeric indicator values by excluding metadata columns (e.g., Country Name, Time).
+* The first detected numeric column is assigned as the value column.
+
+### ✔️ 2. User-Input Driven Transformation
+
+During execution, the user is prompted to enter the following:
+
+```
+Enter indicatorTypeID (e.g., 475):  
+Enter unit (e.g., Percentage):
+```
+
+### ✔️ 3. Navicat Schema Generation
+
+* Automatically creates all **23 required columns** according to the Navicat table schema
+* Any missing columns are filled with NA values to ensure structural consistency
+
+### ✔️ 4. Data Cleaning and Validation
+
+* Removes ".." and non-numeric values
+* Converts the value column to numeric format
+* Filters out NA values
+
+### ✔️ 5. Safe & Descriptive File Naming
+
+The output file is named based on the `name_EN` field:
+
+```
+<indicator_name>_for_Navicat.xlsx
+```
+
+---
+
+## 🧪 How to Use
+
+### 1) Install Required Packages
+
+```r
+install.packages(c("readxl", "dplyr", "openxlsx"))
+```
+
+### 2) Run the Script
+
+```r
+source("make_navicat_data.R")
+```
+
+### 3) Select Input File
+
+A file selection window will appear automatically:
+
+```r
+file_path <- file.choose()
+```
+
+### 4) Enter Required Metadata
+
+The script will prompt:
+
+```
+Enter indicatorTypeID (e.g., 475):  
+Enter unit (e.g., Percentage):
+```
+
+### 5) Output Result
+
+Example output file:
+
+```
+GDP_growth_for_Navicat.xlsx
+```
+
+---
+
+## 📂 Input Format Example
+
+Required columns:
+
+* Country Code
+* Time
+* <indicator value column>
+
+Example:
+
+| Country Code | Country Name  | Time | 2022 | 2023 |
+| ------------ | ------------- | ---- | ---- | ---- |
+| USA          | United States | 2022 | 5.1  | 4.9  |
+
+The script automatically detects the numeric value column.
+
+---
+
+## 📤 Output Format
+
+The final Excel file will include all Navicat schema columns:
+
+```
+phase, id, name_EN, name_ES, name_FR, indicatorTypeID,
+commodityID, ISO3Code, subregionID, continentalregionID,
+date, year, unit, percentageChangeAlert, referencePeriod,
+frequencyID, value, created, lastUpdate, Notes, last_sync,
+dataSourceID, percentageChange95Threshold,
+percentageChange90Threshold, monthIPC3
+```
+
+---
+
+## 🧠 Main Logic
+
+### 1. Value Column Detection
+
+```r
+numeric_values <- suppressWarnings(as.numeric(df[[colname]]))
+```
+
+The first column containing numeric-like data is automatically assigned as the value column.
+
+### 2. Column Renaming
+
+```r
+rename(
+  ISO3Code = `Country Code`,
+  year = Time,
+  value = all_of(value_col)
+)
+```
+
+### 3. Auto-fill Missing Columns
+
+All missing Navicat schema columns are filled with NA values.
+
+### 4. Final Column Ordering
+
+Columns are reordered to match the official Navicat schema sequence using `select()`.
+
+---
+
+## ⚠️ Limitations
+
+* If the source data does not contain `Country Code` or `Time`, the script will fail.
+* If multiple numeric-like value columns exist, only the first one will be used.
+* Complex multi-indicator datasets are outside the supported scope.
+
+---
+
+## 🛠️ Tools Used
+
+* R
+* readxl
+* dplyr
+* openxlsx
+* Windows environment
+
+---
+
+## 👩‍💻 Author
+
+**Minsol Cho**
+IFPRI MTI Unit
+Data Integration & Shiny Dashboard Development
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 # FAO/World Bank → Navicat Schema Transformer  
 ### Transform External Dataset to Match IFPRI Navicat Table Schema  
 **Created by: Minsol Cho**  
